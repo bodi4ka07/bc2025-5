@@ -69,6 +69,22 @@ async function handlePut(code, req, res) {
   });
 }
 
+// Обробка DELETE запиту
+async function handleDelete(code, res) {
+  const cachePath = getCachePath(code);
+  
+  try {
+    await fs.unlink(cachePath);
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OK');
+    console.log(`DELETE ${code} - видалено з кешу`);
+  } catch (error) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+    console.log(`DELETE ${code} - не знайдено в кеші`);
+  }
+}
+
 // Створення HTTP сервера
 const server = http.createServer(async (req, res) => {
   const method = req.method;
@@ -84,11 +100,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
-  // Обробка різних методів
+ // Обробка різних методів
   if (method === 'GET') {
     await handleGet(code, res);
   } else if (method === 'PUT') {
     await handlePut(code, req, res);
+  } else if (method === 'DELETE') {
+    await handleDelete(code, res);
   } else {
     res.writeHead(405, { 'Content-Type': 'text/plain' });
     res.end('Method Not Allowed');
