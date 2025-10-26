@@ -45,6 +45,30 @@ async function handleGet(code, res) {
   }
 }
 
+// Обробка PUT запиту
+async function handlePut(code, req, res) {
+  const cachePath = getCachePath(code);
+  const chunks = [];
+  
+  req.on('data', chunk => {
+    chunks.push(chunk);
+  });
+  
+  req.on('end', async () => {
+    try {
+      const imageData = Buffer.concat(chunks);
+      await fs.writeFile(cachePath, imageData);
+      res.writeHead(201, { 'Content-Type': 'text/plain' });
+      res.end('Created');
+      console.log(`PUT ${code} - збережено в кеш`);
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Internal Server Error');
+      console.error(`PUT ${code} - помилка: ${error.message}`);
+    }
+  });
+}
+
 // Створення HTTP сервера
 const server = http.createServer(async (req, res) => {
   const method = req.method;
@@ -60,9 +84,11 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
-  // Обробка GET
+  // Обробка різних методів
   if (method === 'GET') {
     await handleGet(code, res);
+  } else if (method === 'PUT') {
+    await handlePut(code, req, res);
   } else {
     res.writeHead(405, { 'Content-Type': 'text/plain' });
     res.end('Method Not Allowed');
