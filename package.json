@@ -1,9 +1,19 @@
 {
+  "name": "bc2025-5",
+  "version": "1.0.0",
+  "description": "Кешуючий проксі-сервер",
+  "main": "main.js",
+  "scripts": {
+  "start": "node main.js -h localhost -p 8080 -c ./cache",
+  "dev": "nodemon main.js -- -h localhost -p 8080 -c ./cache"
+},
+  "author": "Bohdan bc2025-5",
+  "license": "MIT",
   "dependencies": {
-    "commander": "^14.0.2",
-    "superagent": "^10.2.3"
+    "commander": "^12.0.0",
+    "superagent": "^9.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.0.0"
   }
 }
