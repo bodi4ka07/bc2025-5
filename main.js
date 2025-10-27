@@ -2,6 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { program } = require('commander');
+const superagent = require('superagent');
 
 // Налаштування параметрів командного рядка
 program
@@ -29,19 +30,44 @@ function getCachePath(code) {
   return path.join(cache, `${code}.jpg`);
 }
 
+// Отримання картинки з http.cat
+async function fetchFromHttpCat(code) {
+  try {
+    const response = await superagent.get(`https://http.cat/${code}`);
+    return response.body;
+  } catch (error) {
+    throw new Error(`Не вдалося отримати картинку з http.cat: ${error.message}`);
+  }
+}
+
 // Обробка GET запиту
 async function handleGet(code, res) {
   const cachePath = getCachePath(code);
   
   try {
+    // Спробувати прочитати з кешу
     const data = await fs.readFile(cachePath);
     res.writeHead(200, { 'Content-Type': 'image/jpeg' });
     res.end(data);
     console.log(`GET ${code} - відправлено з кешу`);
   } catch (error) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
-    console.log(`GET ${code} - не знайдено в кеші`);
+    // Якщо в кеші немає, запитати з http.cat
+    try {
+      console.log(`GET ${code} - відсутній в кеші, запит до http.cat`);
+      const imageData = await fetchFromHttpCat(code);
+      
+      // Зберегти в кеш
+      await fs.writeFile(cachePath, imageData);
+      console.log(`GET ${code} - збережено в кеш`);
+      
+      // Відправити клієнту
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end(imageData);
+    } catch (fetchError) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not Found');
+      console.log(`GET ${code} - не знайдено`);
+    }
   }
 }
 
