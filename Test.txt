@@ -1,0 +1,75 @@
+# === Тестування GET методу ===
+
+# Запуск сервера
+npm run dev
+
+# Тест 1: Отримати картинку з кешу (200 OK)
+curl http://localhost:8080/200 -o test_200.jpg
+
+# Тест 2: Спроба отримати відсутню картинку (404 Not Found)
+curl -i http://localhost:8080/999
+
+# Тест 3: Неправильний HTTP метод (405 Method Not Allowed)
+curl -X POST http://localhost:8080/200 -i
+
+# Тест 4: Некоректний формат коду (400 Bad Request)
+curl -i http://localhost:8080/abc
+
+
+# === Тестування PUT методу ===
+
+# Тест 6: Зберегти картинку для коду 201 (201 Created)
+curl -X PUT http://localhost:8080/201 --data-binary "@cache/200.jpg" -i
+
+# Тест 7: Зберегти картинку для коду 299
+curl -X PUT http://localhost:8080/299 --data-binary "@cache/200.jpg" -i
+
+# Тест 8: Перевірити що збережена картинка читається
+curl http://localhost:8080/201 -o test_201_check.jpg
+
+
+# === Тестування DELETE методу ===
+
+# Тест 10: Видалити картинку з кешу (200 OK)
+curl -X DELETE http://localhost:8080/201 -i
+
+# Тест 11: Спроба видалити неіснуючу картинку (404 Not Found)
+curl -X DELETE http://localhost:8080/999 -i
+
+# Тест 12: Перевірити що видалена картинка більше не доступна
+curl -i http://localhost:8080/201
+
+# Тест 13: Видалити іншу картинку
+curl -X DELETE http://localhost:8080/299 -i
+
+# Тест 9: Замінити існуючу картинку
+curl -X PUT http://localhost:8080/200 --data-binary "@cache/200.jpg" -i
+
+
+# === Тестування інтеграції з http.cat ===
+
+# Тест 14: Перший запит - завантаження з http.cat
+curl http://localhost:3000/418 -o test_418_first.jpg
+
+# Тест 15: Другий запит - з кешу (швидше)
+time curl http://localhost:3000/418 -o test_418_cache.jpg
+
+# Тест 16: Різні HTTP коди
+curl http://localhost:3000/200 -o test_200.jpg
+curl http://localhost:3000/404 -o test_404.jpg
+curl http://localhost:3000/500 -o test_500.jpg
+curl http://localhost:3000/503 -o test_503.jpg
+
+# Тест 17: Неіснуючий код (має 404)
+curl -i http://localhost:3000/999
+
+# Тест 18: Перевірити вміст директорії кешу
+ls -lh cache/
+
+
+# === Тестування у браузері ===
+# Відкрий у браузері (має показати картинки котів):
+# http://localhost:3000/200
+# http://localhost:3000/404
+# http://localhost:3000/418
+# http://localhost:3000/500
